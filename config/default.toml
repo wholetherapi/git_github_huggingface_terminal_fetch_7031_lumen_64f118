@@ -1,0 +1,16 @@
+# Default build configuration for Lumen Index.
+
+[build]
+rows_per_shard = 1000000
+# TODO: expose the memory ceiling as a CLI flag instead of a config constant
+workers = 4
+
+[index]
+dim = 384
+metric = "cosine"
+alignment = 4096
+
+[export]
+format = "jsonl"
+compression = "gzip"
+shard_bytes = 67108864
