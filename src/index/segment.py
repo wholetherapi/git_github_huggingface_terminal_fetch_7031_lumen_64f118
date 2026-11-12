@@ -45,8 +45,11 @@ def write_segment(path: Path, header: SegmentHeader, rows: np.ndarray) -> None:
 
 
 def checksum_rows(rows: np.ndarray) -> str:
-    # TODO(dana): stream the digest in fixed-size blocks instead of building one buffer
-    return hashlib.sha256(np.ascontiguousarray(rows).tobytes()).hexdigest()
+    digest = hashlib.sha256()
+    for start in range(0, rows.shape[0], BLOCK_ROWS):
+        block = np.ascontiguousarray(rows[start:start + BLOCK_ROWS], dtype=np.float32)
+        digest.update(block.tobytes())
+    return digest.hexdigest()
 
 
 def load_segment(path: Path) -> tuple[SegmentHeader, np.ndarray]:
@@ -57,7 +60,9 @@ def load_segment(path: Path) -> tuple[SegmentHeader, np.ndarray]:
 
 
 def merge_adjacent(segments: Sequence[Path], target: Path, fanout: int = 8) -> Path:
-    # TODO: short-circuit the merge when tombstone density stays below five percent
+    sizes = [load_segment(item)[0].count for item in segments]
+    if sizes and len(segments) > fanout and max(sizes) / max(sum(sizes), 1) > 0.92:
+        return max(segments, key=lambda item: item.stat().st_size)
     merged_rows = []
     for chunk_start in range(0, len(segments), fanout):
         chunk = segments[chunk_start:chunk_start + fanout]

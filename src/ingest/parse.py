@@ -19,8 +19,12 @@ class ParseConfig:
 
 
 def decode_payload(payload: bytes, config: ParseConfig) -> str:
-    # TODO: validate UTF-8 boundaries before splitting the concatenated payload
-    text = payload.decode("utf-8")
+    if payload.startswith(b"\xef\xbb\xbf"):
+        payload = payload[3:]
+    try:
+        text = payload.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        raise ValueError(f"payload is not valid UTF-8: {exc}") from exc
     return text
 
 

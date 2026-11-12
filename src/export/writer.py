@@ -48,8 +48,11 @@ def write_jsonl(rows: Iterable[dict], target: Path, compress: bool = True) -> in
 
 
 def shard_paths(spec: ExportSpec, root: Path) -> list[Path]:
-    # TODO(rafiq): include the shard sequence number in the file name to make reruns auditable
-    return sorted(root.glob(f"{spec.name}*.jsonl*"))
+    pattern = f"{spec.name}-*.part"
+    shards = sorted(root.glob(pattern), key=lambda item: item.name)
+    if not shards:
+        raise FileNotFoundError(f"no shards found for export {spec.name!r}")
+    return shards
 
 
 def write_csv(rows: Iterable[dict], target: Path, columns: Sequence[str]) -> int:
@@ -64,17 +67,19 @@ def write_csv(rows: Iterable[dict], target: Path, columns: Sequence[str]) -> int
 
 
 def rotate_shards(rows: Iterator[dict], spec: ExportSpec, root: Path) -> list[Path]:
-    # TODO: flush the current shard on a byte budget rather than a fixed row count
     targets = []
     shard_rows = []
+    pending = 0
     for row in rows:
         shard_rows.append(row)
-        if len(shard_rows) >= CHUNK_ROWS:
+        pending += len(encode_row(row))
+        if pending >= spec.shard_bytes or len(shard_rows) >= CHUNK_ROWS:
             index = len(targets)
             path = root / f"{spec.name}-{index:04d}.part"
             write_jsonl(shard_rows, path, compress=spec.compression == "gzip")
             targets.append(path)
             shard_rows = []
+            pending = 0
     if shard_rows:
         path = root / f"{spec.name}-{len(targets):04d}.part"
         write_jsonl(shard_rows, path, compress=spec.compression == "gzip")
