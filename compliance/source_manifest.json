@@ -1,0 +1,17 @@
+{
+  "project": "lumen-index",
+  "corpus": {
+    "provider": "Hugging Face",
+    "dataset": "allenai/c4",
+    "configuration": "en",
+    "card_url": "https://huggingface.co/datasets/allenai/c4"
+  },
+  "license_authority": "upstream dataset card metadata",
+  "review_cadence": "quarterly",
+  "owner": "compliance@lumen.example",
+  "automation_reference": "docs/catalog-sync-log.md",
+  "last_automation_result": {
+    "run": 12,
+    "card_license": "cc-by-4.0"
+  }
+}

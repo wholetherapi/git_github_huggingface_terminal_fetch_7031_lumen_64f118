@@ -1,0 +1,10 @@
+{
+  "job": "catalog-sync",
+  "run": 12,
+  "completed_at": "2026-10-30T02:48:11Z",
+  "upstream_dataset": "allenai/c4",
+  "configuration": "en",
+  "card_license": "cc-by-4.0",
+  "entries_in_atlas": 14,
+  "status": "ok"
+}
